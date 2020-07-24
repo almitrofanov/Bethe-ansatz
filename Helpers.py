@@ -5,15 +5,17 @@ Created on Mon Jul 20 18:51:28 2020
 @author: Alexander Mitrofanov
 """
 
-
 import numpy as np
 import math
+from BlockDiagonalization import H_BlockDiag
+from HeisenbergHamiltonian import Ham_xxz
 from scipy.optimize import fsolve
 from scipy.optimize import newton_krylov
 from scipy.optimize import anderson
 
 def clean(A, order):
-    A = A.astype(complex)
+    # A =np.matrix(A)
+    # A= complex(A)
     if len(A.shape) > 1:
         length = A.shape[0]
         width = A.shape[1]
@@ -26,15 +28,12 @@ def clean(A, order):
         return A    
     else:
         length = A.shape[0]
-        A = A.astype(complex)
         for i in range(length):           
             if abs(A[i].real) < order:
                 A[i] = 1j*A[i].imag
             if abs(A[i].imag) < order:
                 A[i] = A[i].real
         return A
-
-
 
 def IfEigen(H, E, psi):
     # IfEigen(H_diag, eig_val[0], eig_vec[:, 0])
@@ -77,8 +76,8 @@ def normalyze(a):
 def solving_C2(k_0, lambd, n):    
     func = lambda k_1 : (2*((np.tan(n*k_1/2))**-1) - (((np.tan(k_1/2))**-1)-((np.tan((k_0-k_1)/2)))**-1))
     k_initial_guess = 3
-    k_1 = fsolve(func, k_initial_guess, xtol=1e-12, maxfev = 10000)
-    # k_1 = newton_krylov(func, k_initial_guess, f_tol=1e-12)
+    # k_1 = fsolve(func, k_initial_guess, xtol=1e-12, maxfev = 10000)
+    k_1 = newton_krylov(func, k_initial_guess, f_tol=1e-12)
     # k_1 = anderson(func, k_initial_guess, iter = 10000, f_tol = 1e-12)
     k_2 = k_0 - k_1
     theta = 2*math.pi*lambd[1]-n*k_2
@@ -109,7 +108,7 @@ def solving_C3(k_0, lambd, n):
     for l in range(10):
         if res == 0:
             func = lambda nu : ((np.cos(k_0/2))*np.sinh(n*nu) - np.sinh((n-1)*nu) - np.cos(phi)*np.sinh(nu))
-            nu_initial_guess = 1
+            nu_initial_guess = 3
             nu = fsolve(func, nu_initial_guess, xtol=1e-12, maxfev = 10000)
             # nu = newton_krylov(func, nu_initial_guess, f_tol=1e-12)
             # nu = anderson(func, nu_initial_guess, iter = 10000, f_tol = 1e-12)
@@ -126,23 +125,62 @@ def solving_C3(k_0, lambd, n):
             
             
 def FullAngMom(state, n):
+    state_line = np.matrix(state)
+    state_column = np.transpose(state_line)
+    state_line = np.conj(state_line)
     Sx =0.5*np.array([[0, 1], [1, 0]])
     Sy =0.5*np.array([[0, -1j], [1j, 0]])
     Sz =0.5*np.array([[1, 0], [0, -1]])
-    if n == 4:
-        Sx2 = np.kron(np.identity(8), Sx) + np.kron(np.kron(np.identity(2), Sx), np.identity(4)) + np.kron(np.kron(np.identity(4), Sx), np.identity(2)) + np.kron(Sx, np.identity(8))
-        Sy2 = np.kron(np.identity(8), Sy) + np.kron(np.kron(np.identity(2), Sy), np.identity(4)) + np.kron(np.kron(np.identity(4), Sy), np.identity(2)) + np.kron(Sy, np.identity(8))
-        Sz2 = np.kron(np.identity(8), Sz) + np.kron(np.kron(np.identity(2), Sz), np.identity(4)) + np.kron(np.kron(np.identity(4), Sz), np.identity(2)) + np.kron(Sz, np.identity(8))
-        Sx2 = Sx2 ** 2
-        Sy2 = Sy2 ** 2
-        Sz2 = Sz2 ** 2
-        S2 = Sx2 + Sy2 + Sz2
-        ro = state.dot(np.transpose(state))
-        s2 = np.trace(ro)
-        return s2
+    Sx_total = np.zeros([2**n, 2**n])
+    Sy_total = np.zeros([2**n, 2**n])
+    Sz_total = np.zeros([2**n, 2**n])
+    Sx_total  = np.kron(np.identity(2**(n-1)), Sx) + np.kron(Sx, np.identity(2**(n-1)))
+    Sy_total  = np.kron(np.identity(2**(n-1)), Sy) + np.kron(Sy, np.identity(2**(n-1))) 
+    Sz_total  = np.kron(np.identity(2**(n-1)), Sz) + np.kron(Sz, np.identity(2**(n-1)))      
+    for i in range(1, n-1):           
+        Sx_total = Sx_total + np.kron(np.kron(np.identity(2**i), Sx), np.identity(2**(n-1-i))) 
+        Sy_total = Sy_total + np.kron(np.kron(np.identity(2**i), Sy), np.identity(2**(n-1-i))) 
+        Sz_total = Sz_total + np.kron(np.kron(np.identity(2**i), Sz), np.identity(2**(n-1-i)))
+    Sx_total = Sx_total.dot(Sx_total)
+    Sy_total = Sy_total.dot(Sy_total)
+    Sz_total = Sz_total.dot(Sz_total)
+    S2 = Sx_total + Sy_total + Sz_total
+    H = Ham_xxz(1, np.array([1, 1, 1]), n, 'close')
+    tup = (S2, H[1])
+    [S2, new_basis] = H_BlockDiag(tup, n)
+    ro = state_column.dot(state_line)
+    s2_ro=S2.dot(ro)
+    s2 = np.trace(s2_ro)
+    return s2
 
         
-    
+def FormingHamiltonian(n, states_one_magnon, a_1, a_2, a_3, eig_vec3):
+    length_2 = int(n*(n-1)/2)
+    H_bethe = np.zeros([2**n, 2**n])
+    H_bethe = H_bethe.astype(complex)
+    H_bethe[0,0] = 1
+    limit1 = int(n+1)
+    H_bethe[1:limit1, 1:limit1] = states_one_magnon
+    limit2 = limit1 + length_2
+    H_bethe[limit1:limit2, limit1:limit1 + n] = a_1
+    limit3 = limit1 + n + int(n*(n-5)/2 + 3)
+    H_bethe[limit1:limit2, limit1 + n:limit3] = a_2
+    H_bethe[limit1:limit2, limit3:limit2] = a_3
+    limit4 = limit2 + n*(n-1)*(n-2)/6
+    H_bethe[limit2:limit4,limit2:limit4] = eig_vec3    
+    if n == 6:
+        I=np.zeros([length_2, length_2])
+        for i in range(length_2):
+            I[i,-i-1] = 1
+        H_2magnon_inv = I@H_bethe[limit1:limit2, limit1:limit2]@I       
+        I=np.zeros([n, n])
+        for i in range(n):
+            I[i,-i-1] = 1
+        H_1magnon_inv = I@H_bethe[1:1+n, 1:1+n]@I       
+        H_bethe[42:57,42:57] = H_2magnon_inv
+        H_bethe[57:63,57:63] = H_1magnon_inv
+        H_bethe[63,63] = 1        
+    return H_bethe
     
     
     

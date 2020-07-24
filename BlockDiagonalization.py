@@ -5,7 +5,6 @@ Created on Mon Jul 20 10:51:25 2020
 @author: Alexander Mitrofanov
 """
 
-
 import numpy as np
 
 def H_BlockDiag(hamiltonian_not_diag, n):
@@ -21,10 +20,6 @@ def H_BlockDiag(hamiltonian_not_diag, n):
     H_diag=I.transpose().dot(H)
     H_diag=H_diag.dot(I)
     return H_diag, basis_diag
-
-    
-    
-    
     
 def basis_diag_func(n, basis): 
     fir_counter = 0  
@@ -57,8 +52,6 @@ def basis_diag_func(n, basis):
                 sec_counter = sec_counter + 1
     return basis_diag
                 
-            
-
 def was_it_before_func(fir_counter, basis_diag, i):
     size_A =len(basis_diag)
     if 2**i -1 >= size_A-1:
@@ -74,9 +67,7 @@ def was_it_before_func(fir_counter, basis_diag, i):
         else:
             out = False            
     return out 
-            
-    
-    
+                
 def number_of_zeros_func(A):
     counter_zeros = 0
     A = str(A)

@@ -14,6 +14,7 @@ def one_magnon(J, n):
     a = np.zeros([n,n])
     a = a.astype(complex)
     E_1magnon = np.zeros([n, 1])
+    E_1magnon = E_1magnon.astype(complex)
     for i in range(n):
         k = 2*math.pi*i/n
         E_1magnon[i] = 4*(1 - math.cos(k)) + E0
@@ -22,8 +23,8 @@ def one_magnon(J, n):
     a = clean(a, 1e-10)
     E_1magnon = clean(E_1magnon, 1e-10)
     E_1magnon = E_1magnon.astype(float)
-    a = normalyze(a)
-    return a, E_1magnon
+    b = normalyze(a)
+    return b, E_1magnon
 
 def two_magnons(J, n):
     # the first class C1 (lambda1=0, lambda2 = 0:n-1, k1=0, k2 = 2*pi*lambda2/n, theta=0)
