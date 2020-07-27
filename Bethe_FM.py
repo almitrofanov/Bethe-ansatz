@@ -48,6 +48,7 @@ def two_magnons(J, n):
     # E_1 = int(np.real(E_1))
     
     # the second class C2 (lambda2-lambda1 >= 2,  k1, k2 and theta != 0)
+    print('C2 class')
     count2 = 0
     a_2 = np.zeros([length, int(n*(n-5)/2 + 3)])
     a_2 = a_2.astype(complex)
@@ -59,6 +60,7 @@ def two_magnons(J, n):
                 # print(lambd)
                 k_0 = 2*np.pi*(lambd[0] + lambd[1])/n
                 [k_1, k_2, theta] = solving_C2(k_0, lambd, n)
+                print(k_1, k_2, theta)
                 count1 = 0
                 for n1 in range(1, n):
                     for n2 in range(n1+1, n+1):
@@ -85,6 +87,7 @@ def two_magnons(J, n):
         a_3 = clean(a_3, 1e-10)
         E_3 = 0       
     else:
+        print('\nC3 class')
         # length = int(n*(n-1)/2)
         count = 0
         a_3 = np.zeros([length, n-3])
@@ -94,13 +97,12 @@ def two_magnons(J, n):
         E_3 = E_3.astype(complex)
         for i in range(1, n):
             for j in range(i, i+2):
-                lambd = [i,j]
-                
+                lambd = [i,j]                
                 k_0 = 2*np.pi*(lambd[0] + lambd[1])/n
-                [k_1, k_2, theta] = solving_C3(k_0, lambd, n)
-                # print(k_1, k_2, theta)
+                [k_1, k_2, theta] = solving_C3(k_0, lambd, n)               
                 if theta != np.inf:
                     print(lambd)
+                    print(k_1, k_2, theta)
                     count1 = 0
                     for n1 in range(1, n):
                         for n2 in range(n1+1, n+1):

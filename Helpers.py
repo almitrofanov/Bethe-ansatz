@@ -76,8 +76,8 @@ def normalyze(a):
 def solving_C2(k_0, lambd, n):    
     func = lambda k_1 : (2*((np.tan(n*k_1/2))**-1) - (((np.tan(k_1/2))**-1)-((np.tan((k_0-k_1)/2)))**-1))
     k_initial_guess = 3
-    # k_1 = fsolve(func, k_initial_guess, xtol=1e-12, maxfev = 10000)
-    k_1 = newton_krylov(func, k_initial_guess, f_tol=1e-12)
+    k_1 = fsolve(func, k_initial_guess, xtol=1e-12, maxfev = 10000)
+    # k_1 = newton_krylov(func, k_initial_guess, f_tol=1e-12)
     # k_1 = anderson(func, k_initial_guess, iter = 10000, f_tol = 1e-12)
     k_2 = k_0 - k_1
     theta = 2*math.pi*lambd[1]-n*k_2
@@ -166,8 +166,8 @@ def FormingHamiltonian(n, states_one_magnon, a_1, a_2, a_3, eig_vec3):
     limit3 = limit1 + n + int(n*(n-5)/2 + 3)
     H_bethe[limit1:limit2, limit1 + n:limit3] = a_2
     H_bethe[limit1:limit2, limit3:limit2] = a_3
-    limit4 = limit2 + n*(n-1)*(n-2)/6
-    H_bethe[limit2:limit4,limit2:limit4] = eig_vec3    
+    limit4 = limit2 + int(n*(n-1)*(n-2)/6)
+    H_bethe[limit2:limit4, limit2:limit4] = eig_vec3    
     if n == 6:
         I=np.zeros([length_2, length_2])
         for i in range(length_2):
